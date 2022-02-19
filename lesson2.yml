@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Coudformation temapltes from cloud guru course
+
+Resources:
+  DevEC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: ami-0dd555eb7eb3b7c82
+      InstanceType: t2.micro
+      Tags:
+        - Key: Name
+          Value: !Join
+            - "-"
+            - - "dev"
+              - "ec2"
+              - "instance"
+              - "for"
+              - !Ref "AWS::Region"
+      SecurityGroups:
+        - !Ref MySecurityGroup
+
+  MySecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: Enable SSH via port 22
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0          
+      Tags:
+        - Key: Name
+          Value: dev-ec2-security-group
