@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Cloudformation templates for learning Parameters
+
+Parameters:
+  EC2InstanceKey:
+    Description: select the key for the ec2 instnace from the list
+    Type: "AWS::EC2::KeyPair::KeyName"
+  EC2AvailabilityZones:
+    Description: select the az
+    Type: String
+    Default: eu-west-2a
+    AllowedValues:
+      - eu-west-2a
+      - eu-west-2b
+      - eu-west-2c
+
+Resources:
+  DevEC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: ami-0dd555eb7eb3b7c82
+      InstanceType: t2.micro
+      KeyName: !Ref EC2InstanceKey
+      AvailabilityZone: !Ref EC2AvailabilityZones
+      Tags:
+        - Key: Name
+          Value: !Join
+            - "-"
+            - - "dev"
+              - "ec2"
+              - "instance"
+              - "for"
+              - !Ref "AWS::Region"
+      SecurityGroups:
+        - default
+        - !Ref MySSHSecurityGroup
+
+  MySSHSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: Enable SSH on a EC2 Instance
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: dev-ec2-ssh-security-group

@@ -9,13 +9,7 @@ Resources:
       InstanceType: t2.micro
       Tags:
         - Key: Name
-          Value: !Join
-            - "-"
-            - - "dev"
-              - "ec2"
-              - "instance"
-              - "for"
-              - !Ref "AWS::Region"
+          Value: !Join ["-", ["dev", "ec2", "instance", "for", !Ref AWS::Region]]
       SecurityGroups:
         - !Ref MySecurityGroup
 
