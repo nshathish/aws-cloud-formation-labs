@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Cloudformation templates for learning Parameters
+
+Parameters:
+  MyKeyName:
+    Type: "AWS::EC2::KeyPair::KeyName"
+    Description: select keypair
+  MyEnvironment:
+    Type: String
+    Description: select the environment
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+
+Mappings:
+  AvailableRegions:
+    eu-west-1:
+      HVM64: ami-00000000
+    eu-west-2:
+      HVM64: ami-0dd555eb7eb3b7c82
+  EnvironmentMap:
+    dev:
+      instanceType: t2.micro
+    prod:
+      instanceType: t2.small
+
+Conditions:
+  CreateEIPForProd: !Equals [!Ref MyEnvironment, "prod"]
+  CreateDevSecurityGroup: !Equals [!Ref MyEnvironment, "dev"]
+
+Resources:
+  DevEC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: !FindInMap
+        - AvailableRegions
+        - !Ref "AWS::Region"
+        - HVM64
+      InstanceType: !FindInMap
+        - EnvironmentMap
+        - !Ref MyEnvironment
+        - instanceType
+      KeyName: !Ref MyKeyName
+      Tags:
+        - Key: Name
+          Value: !Join
+            - "-"
+            - - "dev"
+              - "ec2"
+              - "instance"
+              - "for"
+              - !Ref "AWS::Region"
+              - !Ref MyEnvironment
+      SecurityGroups:
+        !If [
+          CreateDevSecurityGroup,
+          [!Ref MySSHSecurityGroup],
+          !Ref "AWS::NoValue",
+        ]
+
+  MySSHSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Condition: CreateDevSecurityGroup
+    Properties:
+      GroupDescription: Enable SSH on a dev EC2 Instance
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: dev-ec2-ssh-security-group
+
+  MyProdEIP:
+    Type: "AWS::EC2::EIP"
+    Condition: CreateEIPForProd
+    Properties:
+      InstanceId: !Ref DevEC2Instance
